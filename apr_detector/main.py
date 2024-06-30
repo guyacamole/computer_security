@@ -21,8 +21,7 @@ def detect_arp_spoofing(arp_table):
       print(f"ARP Spoofing Detected: MAC address {
             mac} is associated with multiple IPs: {ip_mac_mapping[mac]} and {ip}.")
     if ip in ip_mac_mapping.values() and mac not in ip_mac_mapping:
-      print(f"ARP Spoofing Detected: IP address {ip} is associated with multiple MACs: {
-            list(ip_mac_mapping.keys())[list(ip_mac_mapping.values()).index(ip)]} and {mac}.")
+      print(f"ARP Spoofing Detected: IP address {ip} is associated with multiple MACs: {list(ip_mac_mapping.keys())[list(ip_mac_mapping.values()).index(ip)]} and {mac}.")
     ip_mac_mapping[mac] = ip
 
 
