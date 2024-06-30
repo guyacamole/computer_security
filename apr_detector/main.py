@@ -13,7 +13,7 @@ def analyze_arp_packet(packet):
 
 
 def main():
-  sniff(iface="enps0", prn=analyze_arp_packet)
+  sniff(iface="enp1s0", prn=analyze_arp_packet)
 
 
 if __name__ == "__main__":
