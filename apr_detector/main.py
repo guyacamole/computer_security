@@ -8,8 +8,7 @@ def analyze_arp_packet(packet):
     # Maintain a dictionary to track IP-MAC mappings
     arp_table = {}
     if sender_mac in arp_table and arp_table[sender_mac] != sender_ip:
-      print(f"Potential ARP Spoofing Detected: MAC address {
-            sender_mac} is associated with multiple IPs: {arp_table[sender_mac]} and {sender_ip}.")
+      print(f"Potential ARP Spoofing Detected: MAC address {sender_mac} is associated with multiple IPs: {arp_table[sender_mac]} and {sender_ip}.")
     arp_table[sender_mac] = sender_ip
 
 
