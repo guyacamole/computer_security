@@ -3,7 +3,7 @@ from scapy.all import ARP, Ether, srp
 
 def get_arp_table():
   # Create an ARP request packet
-  arp = ARP(pdst="192.168.0.1/24")
+  arp = ARP(pdst="192.168.122.1/24")
   ether = Ether(dst="ff:ff:ff:ff:ff:ff")
   packet = ether/arp
 

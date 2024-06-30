@@ -31,8 +31,8 @@ def packet_sniffer(target_ip):
 
 
 fake_mac = "de:ad:be:ef:de:ad"  # Fake MAC address
-target_ip = "192.168.0.2"  # IP of the target machine
-gateway_ip = "192.168.0.1"  # IP of the router
+target_ip = "192.168.122.178"  # IP of the target machine
+gateway_ip = "192.168.122.1"  # IP of the router
 
 # Start packet sniffer in a separate thread
 sniffer_thread = threading.Thread(
