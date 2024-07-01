@@ -8,6 +8,7 @@ def get_machine_ip():
   result = os.popen('ipconfig').read()
   # Use regular expression to find the IPv4 Address
   ip_address_match = re.search(r'IPv4 Address[ .:]+([\d.]+)', result)
+  print(f"Machine IP: {ip_address_match.group(1) if ip_address_match else 'Not Found'}")
   if ip_address_match:
     return ip_address_match.group(1)
   return None
@@ -18,6 +19,7 @@ def get_default_gateway():
   result = os.popen('ipconfig').read()
   # Use regular expression to find the Default Gateway
   gateway_match = re.search(r'Default Gateway[ .:]+([\d.]+)', result)
+  print(f"Default Gateway: {gateway_match.group(1) if gateway_match else 'Not Found'}")
   if gateway_match:
     return gateway_match.group(1)
   return None
@@ -35,6 +37,7 @@ def get_arp_table():
     parts = line.split()
     if len(parts) == 3 and re.match(r'[\d.]+', parts[0]):
       arp_table.append({'ip': parts[0], 'mac': parts[1]})
+  print(f"ARP Table: {arp_table}")
   return arp_table
 
 
