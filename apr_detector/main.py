@@ -4,22 +4,21 @@ import re
 
 
 def get_machine_ip():
-  # Execute the command to get IP configuration details
   result = os.popen('ipconfig').read()
-  # Use regular expression to find the IPv4 Address
   ip_address_match = re.search(r'IPv4 Address[ .:]+([\d.]+)', result)
-  print(f"Machine IP: {ip_address_match.group(1) if ip_address_match else 'Not Found'}")
+  print(f"Machine IP: {ip_address_match.group(
+      1) if ip_address_match else 'Not Found'}")
   if ip_address_match:
     return ip_address_match.group(1)
   return None
 
 
 def get_default_gateway():
-  # Execute the command to get IP configuration details
   result = os.popen('ipconfig').read()
-  # Use regular expression to find the Default Gateway
-  gateway_match = re.search(r'Default Gateway[ .:]+([\d.]+)', result)
-  print(f"Default Gateway: {gateway_match.group(1) if gateway_match else 'Not Found'}")
+  # Adjusted regular expression to be more flexible
+  gateway_match = re.search(r'Default Gateway[ .:]*([\d.]+)', result)
+  print(f"Default Gateway: {gateway_match.group(
+      1) if gateway_match else 'Not Found'}")
   if gateway_match:
     return gateway_match.group(1)
   return None
@@ -31,6 +30,7 @@ def get_arp_table():
     print("Default gateway not found.")
     return []
   arp_result = os.popen(f'arp -a {gateway_ip}').read()
+  print(f"ARP command result: {arp_result}")  # Debugging print statement
   arp_lines = arp_result.split('\n')
   arp_table = []
   for line in arp_lines:
