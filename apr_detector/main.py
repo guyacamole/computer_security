@@ -21,7 +21,7 @@ def detect_arp_spoofing(gateway_ip, original_mac):
 
 
 if __name__ == "__main__":
-  gateway_ip = input("Enter the IP address of the router: ")
+  gateway_ip = '192.168.0.1'
   original_mac = get_mac(gateway_ip)
 
   if not original_mac:

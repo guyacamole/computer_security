@@ -16,8 +16,8 @@ def arp_spoof(target_ip, gateway_ip, iface):
 
 
 if __name__ == "__main__":
-  target_ip = '192.168.0.33'
-  gateway_ip = '192.168.0.1'
+  target_ip = '192.168.0.172'
+  gateway_ip = '192.168.122.1'
   iface = 'enp1s0'
 
   arp_spoof(target_ip, gateway_ip, iface)
