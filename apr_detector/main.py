@@ -34,7 +34,7 @@ def get_arp_table():
   result = os.popen('arp -a').read()
   arp_table = []
   for line in result.split('\n'):
-    if line.strip() and line.startswith('  '):
+    if line.strip() and re.match(r'^\s*\d{1,3}(\.\d{1,3}){3}', line):
       parts = line.split()
       if len(parts) >= 3:
         arp_table.append((parts[0], parts[1], parts[2]))
@@ -52,7 +52,7 @@ def main():
   print("Monitoring network information for changes...")
 
   while True:
-    time.sleep(1)  # Check every 10 seconds
+    time.sleep(10)  # Check every 10 seconds
 
     current_ip_info = get_ip_addresses()
     current_default_gateway = get_default_gateway()
@@ -74,6 +74,9 @@ def main():
       print("ARP table has changed!")
       print("Old ARP table:", arp_table)
       print("New ARP table:", current_arp_table)
+      for old_entry, new_entry in zip(arp_table, current_arp_table):
+        if old_entry != new_entry:
+          print(f"Change detected: {old_entry} -> {new_entry}")
       arp_table = current_arp_table
 
 
