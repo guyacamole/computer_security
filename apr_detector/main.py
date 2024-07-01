@@ -1,72 +1,46 @@
-import re
 import time
-import platform
-import os
+import psutil
 
 
-def run_command(command):
-  # Function to run a command and return its output
-  stream = os.popen(command)
-  result = stream.read()
-  return result
+def get_network_info():
+  # Get IP addresses
+  addresses = psutil.net_if_addrs()
+  ip_info = {interface: addresses[interface]
+             [1].address for interface in addresses if addresses[interface][1].family == psutil.AF_INET}
+
+  # Get default gateway
+  gateways = psutil.net_if_stats()
+  default_gateway = psutil.net_if_addrs()[list(gateways.keys())[0]][1].address
+
+  return ip_info, default_gateway
 
 
-def get_machine_ip():
-  if platform.system() == "Windows":
-    result = run_command('ipconfig')
-    ip_addresses = re.findall(r'IPv4 Address. *: ([\d.]+)', result)
-  else:
-    result = run_command('hostname -I')
-    ip_addresses = result.split()
-  machine_ip = ip_addresses[0] if ip_addresses else None
-  print(f"Machine IP: {machine_ip if machine_ip else 'Not Found'}")
-  return machine_ip
+def main():
+  # Initial network information
+  ip_info, default_gateway = get_network_info()
 
-
-def get_arp_table():
-  if platform.system() == "Windows":
-    arp_result = run_command(
-        'Get-NetNeighbor -AddressFamily IPv4 | Select-Object IPAddress,LinkLayerAddress')
-  else:
-    arp_result = run_command('arp -a')
-  print(f"ARP command result: {arp_result}")  # Debugging print statement
-  arp_table = []
-  if platform.system() == "Windows":
-    for line in arp_result.split('\n'):
-      parts = line.split()
-      if len(parts) >= 2 and re.match(r'[\d.]+', parts[0]):
-        arp_table.append({'ip': parts[0], 'mac': parts[1]})
-  else:
-    arp_lines = arp_result.split('\n')
-    for line in arp_lines:
-      parts = line.split()
-      if len(parts) >= 4 and re.match(r'[\d.]+', parts[1].strip('()')):
-        arp_table.append({'ip': parts[1].strip('()'), 'mac': parts[3]})
-  print(f"ARP Table: {arp_table}")
-  return arp_table
-
-
-def detect_arp_changes():
-  machine_ip = get_machine_ip()
-  print(f"Machine IP: {machine_ip}")
-  initial_arp_table = [
-      entry for entry in get_arp_table() if entry['ip'] == machine_ip]
-  print("Initial ARP table:")
-  for entry in initial_arp_table:
-    print(f"IP={entry['ip']}, MAC={entry['mac']}")
-  print('debug ..')
+  print("Monitoring network information for changes...")
 
   while True:
-    time.sleep(5)
-    current_arp_table = [
-        entry for entry in get_arp_table() if entry['ip'] == machine_ip]
+    time.sleep(10)  # Check every 10 seconds
 
-    for entry in current_arp_table:
-      if entry not in initial_arp_table:
-        print(f"Change detected for this machine: IP={entry['ip']}, MAC={entry['mac']}")
-        initial_arp_table = current_arp_table
+    # Get the current network information
+    current_ip_info, current_default_gateway = get_network_info()
 
-    initial_arp_table = current_arp_table
+    # Compare IP addresses
+    if current_ip_info != ip_info:
+      print("IP addresses have changed!")
+      print("Old IP info:", ip_info)
+      print("New IP info:", current_ip_info)
+      ip_info = current_ip_info
+
+    # Compare default gateway
+    if current_default_gateway != default_gateway:
+      print("Default gateway has changed!")
+      print("Old gateway:", default_gateway)
+      print("New gateway:", current_default_gateway)
+      default_gateway = current_default_gateway
 
 
-detect_arp_changes()
+if __name__ == "__main__":
+  main()
