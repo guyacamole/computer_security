@@ -1,43 +1,64 @@
-from scapy.all import ARP, Ether, srp
+import os
+import time
+import re
+
+
+def get_machine_ip():
+  # Execute the command to get IP configuration details
+  result = os.popen('ipconfig').read()
+  # Use regular expression to find the IPv4 Address
+  ip_address_match = re.search(r'IPv4 Address[ .:]+([\d.]+)', result)
+  if ip_address_match:
+    return ip_address_match.group(1)
+  return None
+
+
+def get_default_gateway():
+  # Execute the command to get IP configuration details
+  result = os.popen('ipconfig').read()
+  # Use regular expression to find the Default Gateway
+  gateway_match = re.search(r'Default Gateway[ .:]+([\d.]+)', result)
+  if gateway_match:
+    return gateway_match.group(1)
+  return None
 
 
 def get_arp_table():
-  # Create an ARP request packet
-  arp = ARP(pdst="192.168.0.1/24")
-  ether = Ether(dst="ff:ff:ff:ff:ff:ff")
-  packet = ether/arp
-
-  # Send the packet and capture the response
-  result = srp(packet, timeout=3, verbose=0)[0]
-
-  # Extract the ARP table from the response
+  gateway_ip = get_default_gateway()
+  if not gateway_ip:
+    print("Default gateway not found.")
+    return []
+  arp_result = os.popen(f'arp -a {gateway_ip}').read()
+  arp_lines = arp_result.split('\n')
   arp_table = []
-  for sent, received in result:
-    arp_table.append({'ip': received.psrc, 'mac': received.hwsrc})
-
+  for line in arp_lines:
+    parts = line.split()
+    if len(parts) == 3 and re.match(r'[\d.]+', parts[0]):
+      arp_table.append({'ip': parts[0], 'mac': parts[1]})
   return arp_table
 
 
 def detect_arp_changes():
-  # Get the initial ARP table
-  initial_arp_table = get_arp_table()
+  machine_ip = get_machine_ip()
+  print(f"Machine IP: {machine_ip}")
+  initial_arp_table = [
+      entry for entry in get_arp_table() if entry['ip'] == machine_ip]
+  print("Initial ARP table:")
+  for entry in initial_arp_table:
+    print(f"IP={entry['ip']}, MAC={entry['mac']}")
 
   while True:
-    # Get the current ARP table
-    current_arp_table = get_arp_table()
+    time.sleep(5)
+    current_arp_table = [
+        entry for entry in get_arp_table() if entry['ip'] == machine_ip]
 
-    # Compare the current ARP table with the initial ARP table
     for entry in current_arp_table:
       if entry not in initial_arp_table:
-        print(f"New device detected: IP={entry['ip']}, MAC={entry['mac']}")
+        print(f"Change detected for this machine: IP={
+              entry['ip']}, MAC={entry['mac']}")
+        initial_arp_table = current_arp_table
 
-    for entry in initial_arp_table:
-      if entry not in current_arp_table:
-        print(f"Device removed: IP={entry['ip']}, MAC={entry['mac']}")
-
-    # Update the initial ARP table
     initial_arp_table = current_arp_table
 
 
-# Run the script
 detect_arp_changes()
