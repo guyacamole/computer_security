@@ -28,9 +28,8 @@ def detect_arp_spoofing(arp_table, arp_history):
 
   # Check for frequent changes in IP-MAC mappings
   for history_table in arp_history:
-    for entry in arp_table:
-      if entry in history_table and entry['mac'] != history_table[entry['ip']]:
-        print(f"Potential ARP Spoofing: IP {entry['ip']} has changed MAC from {history_table[entry['ip']]} to {entry['mac']}.")
+    if entry['ip'] in history_table and entry['mac'] != history_table[entry['ip']]:
+      print(f"Potential ARP Spoofing: IP {entry['ip']} has changed MAC from {history_table[entry['ip']]} to {entry['mac']}.")
 
 
 def detect_arp_changes():
