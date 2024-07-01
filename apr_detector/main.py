@@ -21,11 +21,9 @@ def detect_arp_spoofing(arp_table, arp_history):
   for entry in arp_table:
     ip, mac = entry['ip'], entry['mac']
     if mac in ip_mac_mapping and ip_mac_mapping[mac] != ip:
-      print(f"ARP Spoofing Detected: MAC address {
-            mac} is associated with multiple IPs: {ip_mac_mapping[mac]} and {ip}.")
+      print(f"ARP Spoofing Detected: MAC address {mac} is associated with multiple IPs: {ip_mac_mapping[mac]} and {ip}.")
     if ip in ip_mac_mapping.values() and mac not in ip_mac_mapping:
-      print(f"ARP Spoofing Detected: IP address {ip} is associated with multiple MACs: {
-            list(ip_mac_mapping.keys())[list(ip_mac_mapping.values()).index(ip)]} and {mac}.")
+      print(f"ARP Spoofing Detected: IP address {ip} is associated with multiple MACs: {list(ip_mac_mapping.keys())[list(ip_mac_mapping.values()).index(ip)]} and {mac}.")
     ip_mac_mapping[mac] = ip
 
   # Check for frequent changes in IP-MAC mappings
@@ -46,6 +44,7 @@ def detect_arp_changes():
   while True:
     time.sleep(5)  # Wait for 5 seconds before checking again
     current_arp_table = get_arp_table()
+    print("Current ARP table:", current_arp_table)
     detect_arp_spoofing(current_arp_table, arp_history)
 
     # Update ARP history
