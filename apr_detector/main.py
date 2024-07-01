@@ -17,15 +17,17 @@ def get_ip_addresses():
 def get_default_gateway():
   # Use ipconfig to get the default gateway
   result = os.popen('ipconfig').read()
-  print(result)
   gateway = None
+  found_gateway = False
   for line in result.split('\n'):
     if 'Default Gateway' in line:
-      parts = line.split(':')
-      if len(parts) > 1:
-        gateway = parts[1].strip()
-        if gateway:
-          return gateway
+      found_gateway = True
+    elif found_gateway:
+      parts = line.strip().split()
+      if len(parts) > 0 and re.match(r'^\d{1,3}(\.\d{1,3}){3}$', parts[0]):
+        gateway = parts[0]
+        break
+      found_gateway = False
   return gateway
 
 
