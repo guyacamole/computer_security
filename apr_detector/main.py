@@ -1,30 +1,43 @@
 from scapy.all import ARP, Ether, srp
-import time
 
 
-def get_mac(ip):
-  arp_request = ARP(pdst=ip)
-  broadcast = Ether(dst="ff:ff:ff:ff:ff:ff")
-  arp_request_broadcast = broadcast/arp_request
-  answered_list = srp(arp_request_broadcast, timeout=1, verbose=False)[0]
-  return answered_list[0][1].hwsrc if answered_list else None
+def get_arp_table():
+  # Create an ARP request packet
+  arp = ARP(pdst="192.168.0.1/24")
+  ether = Ether(dst="ff:ff:ff:ff:ff:ff")
+  packet = ether/arp
+
+  # Send the packet and capture the response
+  result = srp(packet, timeout=3, verbose=0)[0]
+
+  # Extract the ARP table from the response
+  arp_table = []
+  for sent, received in result:
+    arp_table.append({'ip': received.psrc, 'mac': received.hwsrc})
+
+  return arp_table
 
 
-def detect_arp_spoofing(gateway_ip, original_mac):
+def detect_arp_changes():
+  # Get the initial ARP table
+  initial_arp_table = get_arp_table()
+
   while True:
-    current_mac = get_mac(gateway_ip)
-    if current_mac and current_mac != original_mac:
-      print(f"[!] ARP Spoofing detected! Original MAC: {original_mac}, New MAC: {current_mac}")
-    else:
-      print("No ARP Spoofing detected.")
-    time.sleep(5)
+    # Get the current ARP table
+    current_arp_table = get_arp_table()
+
+    # Compare the current ARP table with the initial ARP table
+    for entry in current_arp_table:
+      if entry not in initial_arp_table:
+        print(f"New device detected: IP={entry['ip']}, MAC={entry['mac']}")
+
+    for entry in initial_arp_table:
+      if entry not in current_arp_table:
+        print(f"Device removed: IP={entry['ip']}, MAC={entry['mac']}")
+
+    # Update the initial ARP table
+    initial_arp_table = current_arp_table
 
 
-if __name__ == "__main__":
-  gateway_ip = '192.168.0.1'
-  original_mac = get_mac(gateway_ip)
-
-  if not original_mac:
-    print("Could not find the original MAC address for the router.")
-  else:
-    detect_arp_spoofing(gateway_ip, original_mac)
+# Run the script
+detect_arp_changes()
