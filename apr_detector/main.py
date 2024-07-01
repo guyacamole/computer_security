@@ -1,39 +1,51 @@
-import os
 import re
 import time
+import platform
+import subprocess
+
+
+def run_command(command):
+  # Function to run a command and return its output
+  process = subprocess.Popen(
+      command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+  result, error = process.communicate()
+  if process.returncode != 0:
+    print(f"Error running command: {error}")
+    return None
+  return result.decode('utf-8')
 
 
 def get_machine_ip():
-  # Using hostname -I to get the machine IP, taking the first IP as the machine IP
-  result = os.popen('hostname -I').read().strip()
-  ip_addresses = result.split()
+  if platform.system() == "Windows":
+    result = run_command('ipconfig')
+    ip_addresses = re.findall(r'IPv4 Address. *: ([\d.]+)', result)
+  else:
+    result = run_command('hostname -I')
+    ip_addresses = result.split()
   machine_ip = ip_addresses[0] if ip_addresses else None
   print(f"Machine IP: {machine_ip if machine_ip else 'Not Found'}")
   return machine_ip
 
 
-def get_default_gateway():
-  # Using ip route to get the default gateway
-  result = os.popen('ip route show default').read()
-  gateway_match = re.search(r'default via ([\d.]+)', result)
-  default_gateway = gateway_match.group(1) if gateway_match else None
-  print(f"Default Gateway: {default_gateway if default_gateway else 'Not Found'}")
-  return default_gateway
-
-
 def get_arp_table():
-  gateway_ip = get_default_gateway()
-  if not gateway_ip:
-    print("Default gateway not found.")
-    return []
-  arp_result = os.popen('arp -a').read()
+  if platform.system() == "Windows":
+    arp_result = run_command(
+        'Get-NetNeighbor -AddressFamily IPv4 | Select-Object IPAddress,LinkLayerAddress')
+  else:
+    arp_result = run_command('arp -a')
   print(f"ARP command result: {arp_result}")  # Debugging print statement
-  arp_lines = arp_result.split('\n')
   arp_table = []
-  for line in arp_lines:
-    parts = line.split()
-    if len(parts) >= 4 and re.match(r'[\d.]+', parts[1].strip('()')):
-      arp_table.append({'ip': parts[1].strip('()'), 'mac': parts[3]})
+  if platform.system() == "Windows":
+    for line in arp_result.split('\n'):
+      parts = line.split()
+      if len(parts) >= 2 and re.match(r'[\d.]+', parts[0]):
+        arp_table.append({'ip': parts[0], 'mac': parts[1]})
+  else:
+    arp_lines = arp_result.split('\n')
+    for line in arp_lines:
+      parts = line.split()
+      if len(parts) >= 4 and re.match(r'[\d.]+', parts[1].strip('()')):
+        arp_table.append({'ip': parts[1].strip('()'), 'mac': parts[3]})
   print(f"ARP Table: {arp_table}")
   return arp_table
 
