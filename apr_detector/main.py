@@ -17,11 +17,16 @@ def get_ip_addresses():
 def get_default_gateway():
   # Use ipconfig to get the default gateway
   result = os.popen('ipconfig').read()
-  # Use a regular expression to find the default gateway in the ipconfig output
-  gateway = re.search(r'Default Gateway[ .]*: ([0-9.]+)', result)
-  if gateway:
-    return gateway.group(1)
-  return None
+  print(result)
+  gateway = None
+  for line in result.split('\n'):
+    if 'Default Gateway' in line:
+      parts = line.split(':')
+      if len(parts) > 1:
+        gateway = parts[1].strip()
+        if gateway:
+          return gateway
+  return gateway
 
 
 def main():
@@ -34,7 +39,7 @@ def main():
   print("Monitoring network information for changes...")
 
   while True:
-    time.sleep(2)  # Check every 10 seconds
+    time.sleep(10)  # Check every 10 seconds
 
     # Get the current network information
     current_ip_info = get_ip_addresses()
