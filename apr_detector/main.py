@@ -2,6 +2,7 @@ import os
 import time
 import psutil
 import socket
+import re
 
 
 def get_ip_addresses():
@@ -14,13 +15,12 @@ def get_ip_addresses():
 
 
 def get_default_gateway():
-  # Use netstat to get the default gateway
-  result = os.popen('netstat -rn').read()
-  for line in result.split('\n'):
-    if line.startswith('  0.0.0.0'):
-      parts = line.split()
-      if len(parts) >= 2:
-        return parts[1]
+  # Use ipconfig to get the default gateway
+  result = os.popen('ipconfig').read()
+  # Use a regular expression to find the default gateway in the ipconfig output
+  gateway = re.search(r'Default Gateway[ .]*: ([0-9.]+)', result)
+  if gateway:
+    return gateway.group(1)
   return None
 
 
