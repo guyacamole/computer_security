@@ -46,6 +46,7 @@ def detect_arp_changes():
   print("Initial ARP table:")
   for entry in initial_arp_table:
     print(f"IP={entry['ip']}, MAC={entry['mac']}")
+  print('debug ..')
 
   while True:
     time.sleep(5)
