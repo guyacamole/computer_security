@@ -1,23 +1,31 @@
 import time
 import psutil
+import socket
 
 
-def get_network_info():
-  # Get IP addresses
-  addresses = psutil.net_if_addrs()
-  ip_info = {interface: addresses[interface]
-             [1].address for interface in addresses if addresses[interface][1].family == psutil.AF_INET}
+def get_ip_addresses():
+  ip_info = {}
+  for interface, addrs in psutil.net_if_addrs().items():
+    for addr in addrs:
+      if addr.family == socket.AF_INET:
+        ip_info[interface] = addr.address
+  return ip_info
 
-  # Get default gateway
-  gateways = psutil.net_if_stats()
-  default_gateway = psutil.net_if_addrs()[list(gateways.keys())[0]][1].address
 
-  return ip_info, default_gateway
+def get_default_gateway():
+  gws = psutil.net_if_stats()
+  for interface, addrs in psutil.net_if_addrs().items():
+    if interface in gws and gws[interface].isup:
+      for addr in addrs:
+        if addr.family == socket.AF_INET:
+          return addr.address
+  return None
 
 
 def main():
   # Initial network information
-  ip_info, default_gateway = get_network_info()
+  ip_info = get_ip_addresses()
+  default_gateway = get_default_gateway()
 
   print("Monitoring network information for changes...")
 
@@ -25,7 +33,8 @@ def main():
     time.sleep(10)  # Check every 10 seconds
 
     # Get the current network information
-    current_ip_info, current_default_gateway = get_network_info()
+    current_ip_info = get_ip_addresses()
+    current_default_gateway = get_default_gateway()
 
     # Compare IP addresses
     if current_ip_info != ip_info:
