@@ -1,18 +1,14 @@
 import re
 import time
 import platform
-import subprocess
+import os
 
 
 def run_command(command):
   # Function to run a command and return its output
-  process = subprocess.Popen(
-      command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-  result, error = process.communicate()
-  if process.returncode != 0:
-    print(f"Error running command: {error}")
-    return None
-  return result.decode('utf-8')
+  stream = os.popen(command)
+  result = stream.read()
+  return result
 
 
 def get_machine_ip():
