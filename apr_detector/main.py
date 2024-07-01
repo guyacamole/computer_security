@@ -2,11 +2,11 @@ from scapy.all import ARP, Ether, srp, conf
 import time
 
 # Set the network interface (replace 'eth0' with your interface)
-conf.iface = "enp1s0"
+conf.iface = "wlp0s20f3"
 
 
 def get_arp_table():
-  arp = ARP(pdst="192.168.122.1/24")
+  arp = ARP(pdst="192.168.0.1/24")
   ether = Ether(dst="ff:ff:ff:ff:ff:ff")
   packet = ether/arp
   result = srp(packet, timeout=3, verbose=0)[0]

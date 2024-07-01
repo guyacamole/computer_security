@@ -1,10 +1,7 @@
 import os
 import scapy.all as scapy
-from scapy.all import conf
 import time
 
-# Set the network interface (replace 'eth0' with your interface)
-conf.iface = "enp1s0"
 
 # Check for root privileges
 if not os.geteuid() == 0:
@@ -27,8 +24,8 @@ def spoof(target_ip, spoof_ip, fake_mac):
 
 
 fake_mac = "de:ad:be:ef:de:ad"  # Fake MAC address
-target_ip = "192.168.122.178"  # IP of the target machine
-gateway_ip = "192.168.122.1"  # IP of the router
+target_ip = "192.168.0.17"  # IP of the target machine
+gateway_ip = "192.168.0.1"  # IP of the router
 
 try:
   while True:
