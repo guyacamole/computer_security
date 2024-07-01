@@ -1,5 +1,8 @@
-from scapy.all import ARP, Ether, srp
+from scapy.all import ARP, Ether, srp, conf
 import time
+
+# Set the network interface (replace 'eth0' with your interface)
+conf.iface = "enp1s0"
 
 
 def get_arp_table():
@@ -26,11 +29,13 @@ def detect_arp_spoofing(arp_table):
 
 def detect_arp_changes():
   initial_arp_table = get_arp_table()
+  print("Initial ARP table:", initial_arp_table)
   detect_arp_spoofing(initial_arp_table)  # Initial check for ARP spoofing
 
   while True:
     time.sleep(5)  # Wait for 5 seconds before checking again
     current_arp_table = get_arp_table()
+    print("Current ARP table:", current_arp_table)
     # Check for ARP spoofing in the current ARP table
     detect_arp_spoofing(current_arp_table)
 

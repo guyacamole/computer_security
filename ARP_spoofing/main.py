@@ -1,6 +1,10 @@
 import os
 import scapy.all as scapy
+from scapy.all import conf
 import time
+
+# Set the network interface (replace 'eth0' with your interface)
+conf.iface = "enp1s0"
 
 # Check for root privileges
 if not os.geteuid() == 0:
