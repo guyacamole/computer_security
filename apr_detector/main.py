@@ -1,48 +1,61 @@
-import subprocess
+import os
+import time
 import re
 
 
 def get_machine_ip():
-  # Using PowerShell to get the IP address
-  result = subprocess.run(
-      ["powershell", "-Command", "Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -like '*Ethernet*' } | Select-Object IPAddress"], capture_output=True, text=True)
-  ip_address_match = re.search(r'IPAddress\s+:\s([\d.]+)', result.stdout)
+  result = os.popen('ip addr').read()
+  ip_address_match = re.search(r'inet ([\d.]+)/', result)
   print(f"Machine IP: {ip_address_match.group(
       1) if ip_address_match else 'Not Found'}")
-  return ip_address_match.group(1) if ip_address_match else None
+  if ip_address_match:
+    return ip_address_match.group(1)
+  return None
+
+
+def get_default_gateway():
+  result = os.popen('ip route').read()
+  gateway_match = re.search(r'default via ([\d.]+)', result)
+  print(f"Default Gateway: {gateway_match.group(
+      1) if gateway_match else 'Not Found'}")
+  if gateway_match:
+    return gateway_match.group(1)
+  return None
 
 
 def get_arp_table():
-  # Using PowerShell to get the ARP table
-  arp_result = subprocess.run(
-      ["powershell", "-Command", "Get-NetNeighbor -AddressFamily IPv4 | Select-Object IPAddress,LinkLayerAddress"], capture_output=True, text=True)
-  # Debugging print statement
-  print(f"ARP command result: {arp_result.stdout}")
-  arp_lines = arp_result.stdout.split('\n')
+  arp_result = os.popen('arp -a').read()
+  arp_lines = arp_result.split('\n')
   arp_table = []
   for line in arp_lines:
-    if 'IPAddress' in line or '---' in line or not line.strip():
-      continue  # Skip headers and empty lines
     parts = line.split()
-    if len(parts) >= 2:
-      arp_table.append({'ip': parts[0], 'mac': parts[1]})
+    if len(parts) >= 4 and re.match(r'[\d.]+', parts[1].strip('()')):
+      arp_table.append({'ip': parts[1].strip('()'), 'mac': parts[3]})
   return arp_table
 
 
-def check_host_arp():
+def detect_arp_changes():
   machine_ip = get_machine_ip()
-  if not machine_ip:
-    print("Machine IP not found. Exiting.")
-    return
+  print(f"Machine IP: {machine_ip}")
+  initial_arp_table = [
+      entry for entry in get_arp_table() if entry['ip'] == machine_ip]
+  print("Initial ARP table:")
+  for entry in initial_arp_table:
+    print(f"IP={entry['ip']}, MAC={entry['mac']}")
+  print('debug ..')
 
-  arp_table = get_arp_table()
-  host_arp_entry = next(
-      (entry for entry in arp_table if entry['ip'] == machine_ip), None)
+  while True:
+    time.sleep(5)
+    current_arp_table = [
+        entry for entry in get_arp_table() if entry['ip'] == machine_ip]
 
-  if host_arp_entry:
-    print(f"Host ARP entry: IP={host_arp_entry['ip']}, MAC={host_arp_entry['mac']}")
-  else:
-    print("No ARP entry found for the host machine.")
+    for entry in current_arp_table:
+      if entry not in initial_arp_table:
+        print(f"Change detected for this machine: IP={
+              entry['ip']}, MAC={entry['mac']}")
+        initial_arp_table = current_arp_table
+
+    initial_arp_table = current_arp_table
 
 
-check_host_arp()
+detect_arp_changes()
