@@ -1,3 +1,4 @@
+import os
 import time
 import psutil
 import socket
@@ -13,12 +14,13 @@ def get_ip_addresses():
 
 
 def get_default_gateway():
-  gws = psutil.net_if_stats()
-  for interface, addrs in psutil.net_if_addrs().items():
-    if interface in gws and gws[interface].isup:
-      for addr in addrs:
-        if addr.family == socket.AF_INET:
-          return addr.address
+  # Use netstat to get the default gateway
+  result = os.popen('netstat -rn').read()
+  for line in result.split('\n'):
+    if line.startswith('  0.0.0.0'):
+      parts = line.split()
+      if len(parts) >= 2:
+        return parts[1]
   return None
 
 
@@ -26,13 +28,13 @@ def main():
   # Initial network information
   ip_info = get_ip_addresses()
   default_gateway = get_default_gateway()
-  print("Initial IP info:", ip_info)
-  print("Initial gateway:", default_gateway)
 
+  print("Initial IP info:", ip_info)
+  print("Initial Default gateway:", default_gateway)
   print("Monitoring network information for changes...")
 
   while True:
-    time.sleep(1)  # Check every 10 seconds
+    time.sleep(2)  # Check every 10 seconds
 
     # Get the current network information
     current_ip_info = get_ip_addresses()
