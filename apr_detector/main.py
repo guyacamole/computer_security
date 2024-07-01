@@ -52,7 +52,7 @@ def main():
   print("Monitoring network information for changes...")
 
   while True:
-    time.sleep(10)  # Check every 10 seconds
+    time.sleep(1)  # Check every 10 seconds
 
     current_ip_info = get_ip_addresses()
     current_default_gateway = get_default_gateway()
