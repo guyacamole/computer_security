@@ -42,12 +42,9 @@ def check_arp_table(router_ip, known_router_mac):
 
 
 if __name__ == "__main__":
-  if len(sys.argv) != 3:
-    print("Uso: python detect_arp_spoofing.py <IP_ROUTER> <MAC_CONOCIDA_ROUTER>")
-    sys.exit(1)
 
-  router_ip = sys.argv[1]
-  known_router_mac = sys.argv[2]
+  router_ip = '192.168.122.1'
+  known_router_mac = '52:54:00:b7:ca:05'
 
   if check_arp_table(router_ip, known_router_mac):
     print("No se detectaron modificaciones en la tabla ARP.")
