@@ -2,7 +2,7 @@ import scapy.all as scapy
 import time
 
 # Definir las direcciones IP del objetivo y del router
-objetivo_ip = "192.168.122.10"  # Reemplazar con la IP real del objetivo
+objetivo_ip = "192.168.122.178"  # Reemplazar con la IP real del objetivo
 router_ip = "192.168.122.1"  # Reemplazar con la IP real del router
 
 # Enviar paquetes ARP falsos al objetivo
