@@ -26,11 +26,13 @@ def main():
   # Initial network information
   ip_info = get_ip_addresses()
   default_gateway = get_default_gateway()
+  print("Initial IP info:", ip_info)
+  print("Initial gateway:", default_gateway)
 
   print("Monitoring network information for changes...")
 
   while True:
-    time.sleep(10)  # Check every 10 seconds
+    time.sleep(1)  # Check every 10 seconds
 
     # Get the current network information
     current_ip_info = get_ip_addresses()
